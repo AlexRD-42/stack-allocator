@@ -6,7 +6,7 @@
 /*   By: adeimlin <adeimlin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/06 16:01:57 by adeimlin          #+#    #+#             */
-/*   Updated: 2025/12/12 22:00:45 by adeimlin         ###   ########.fr       */
+/*   Updated: 2025/12/13 19:24:13 by adeimlin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,12 @@ enum e_sizes
 
 size_t	ft_bsf(size_t word);
 size_t	ft_bsr(size_t word);
-size_t	ft_membsr(size_t *word, size_t start, size_t request, size_t count);
-size_t	ft_membsr_not(size_t *word, size_t start, size_t request, size_t count);
+size_t	ft_bsr(size_t word);
+size_t	ft_bitfind(size_t *word, size_t start, size_t end, bool bit);
+void	ft_bitset(size_t bitmap[static META_COUNT], size_t start, size_t end);
+void	ft_bitclr(size_t bitmap[static META_COUNT], size_t start, size_t end);
+void	ft_bitrange(size_t bitmap[static META_COUNT], size_t start, size_t end, bool bit);
+
 size_t	ft_popcount(size_t word);
 
 typedef struct s_bitptr

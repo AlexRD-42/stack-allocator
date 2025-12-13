@@ -6,7 +6,7 @@
 /*   By: adeimlin <adeimlin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/12 10:36:32 by adeimlin          #+#    #+#             */
-/*   Updated: 2025/12/12 17:49:20 by adeimlin         ###   ########.fr       */
+/*   Updated: 2025/12/13 19:26:05 by adeimlin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,21 +28,7 @@ size_t	ft_bsf(size_t word)
 	return (i);
 }
 
-// Is effectively log2
-size_t	ft_bsr(size_t word)
-{
-	size_t	i;
-
-	i = 0;
-	word >>= 1;	// Review
-	while (word)
-	{
-		word >>= 1;
-		i++;
-	}
-	return (i);
-}
-
+// With O1 optimizes to popcount
 size_t	ft_popcount(size_t word)
 {
 	size_t	i;
@@ -56,73 +42,107 @@ size_t	ft_popcount(size_t word)
 	return (i);
 }
 
-// There has to be a better way but alas norminette forces my hand
-size_t	ft_membsr(size_t word[static META_COUNT], size_t start, size_t request, size_t count)
+// Returns 0 for word == 0, and 1 based indexing
+// With O1 optimizes to lzcnt or bsr
+size_t	ft_bsr(size_t word)
 {
 	size_t	i;
-	size_t	run;
-	size_t	offset;
-	size_t	bitmap;
 
-	run = 0;
-	i = start / META_BIT;
-	offset = start % META_BIT;
-	bitmap = word[i] & (SIZE_MAX >> offset);
-	if (bitmap != 0)
-		return (META_BIT - 1 - ft_bsr(bitmap) + i * META_BIT);
-	run += META_BIT - offset;
-	i++;
-	while (run < request && i < count)
+	i = 0;
+	while (word)
 	{
-		bitmap = word[i];
-		if (bitmap != 0)
-			return (META_BIT - 1 - ft_bsr(bitmap) + i * META_BIT);
-		run += META_BIT;
+		word >>= 1;
 		i++;
 	}
-	return (start + run);
+	return (i);
 }
 
-size_t	ft_membsr_not(size_t word[static META_COUNT], size_t start, size_t request, size_t count)
+// If end is not word aligned, it will scan past end until alignment
+size_t	ft_bitfind(size_t *word, size_t start, size_t end, bool bit)
 {
-	size_t	i;
-	size_t	run;
-	size_t	offset;
-	size_t	bitmap;
+	size_t			cur;
+	size_t			bitmap;
+	const size_t	invert = SIZE_MAX * !bit;
 
-	run = 0;
-	i = start / META_BIT;
-	offset = start % META_BIT;
-	bitmap = ~word[i] & (SIZE_MAX >> offset);
+	cur = start + META_BIT - (start % META_BIT);
+	bitmap = (word[start / META_BIT] ^ invert) & (SIZE_MAX >> (start % META_BIT));
 	if (bitmap != 0)
-		return (META_BIT - 1 - ft_bsr(bitmap) + i * META_BIT);
-	run += META_BIT - offset;
-	i++;
-	while (run < request && i < count)
+		return (cur - 1 - (ft_bsr(bitmap) - 1)); // the compiler needs the -1
+	while (cur < end)
 	{
-		bitmap = ~word[i];
+		bitmap = word[cur / META_BIT] ^ invert;
 		if (bitmap != 0)
-			return (META_BIT - 1 - ft_bsr(bitmap) + i * META_BIT);
-		run += META_BIT;
-		i++;
+			return (cur + (META_BIT - 1) - (ft_bsr(bitmap) - 1));
+		cur += META_BIT;
 	}
-	return (start + run);
+	return (SIZE_MAX);
 }
 
-size_t	ft_bitset(size_t bitmap[static META_COUNT], size_t start, size_t value)
+void	ft_bitset(size_t bitmap[static META_COUNT], size_t start, size_t end)
 {
-	size_t	i;
-	size_t	run;
-	size_t	offset;
-	size_t	mask;
+	size_t			i;
+	const size_t	word_start = start / META_BIT;
+	const size_t	word_end = (end - 1) / META_BIT;
+	size_t			start_mask;
+	size_t			end_mask;
 
-	mask = (SIZE_MAX >> offset);
-	offset = start % META_BIT;
-	i++;
-	while (value != 0)
+	start_mask = SIZE_MAX >> (start % META_BIT);
+	end_mask = SIZE_MAX << ((META_BIT - (end % META_BIT)) % META_BIT);
+	if (word_end == word_start)
 	{
-		bitmap = bitmap[i];
-		i++;
+		bitmap[word_start] |= start_mask & end_mask;
+		return ;
 	}
-	return (start + run);
+	bitmap[word_start] |= SIZE_MAX >> (start % META_BIT);
+	i = word_start + 1;
+	while (i < word_end)
+		bitmap[i++] = SIZE_MAX;
+	bitmap[word_end] |= end_mask;
+}
+
+void	ft_bitclr(size_t bitmap[static META_COUNT], size_t start, size_t end)
+{
+	size_t			i;
+	const size_t	word_start = start / META_BIT;
+	const size_t	word_end = (end - 1) / META_BIT;
+	size_t			start_mask;
+	size_t			end_mask;
+
+	start_mask = SIZE_MAX >> (start % META_BIT);
+	end_mask = SIZE_MAX << ((META_BIT - (end % META_BIT)) % META_BIT);
+	if (word_end == word_start)
+	{
+		bitmap[word_start] &= ~(start_mask & end_mask);
+		return ;
+	}
+	bitmap[word_start] &= ~start_mask;
+	i = word_start + 1;
+	while (i < word_end)
+		bitmap[i++] = 0;
+	bitmap[word_end] &= ~end_mask;
+}
+
+void	ft_bitrange(size_t bitmap[static META_COUNT], size_t start, size_t end, bool set)
+{
+	size_t			start_mask;
+	size_t			end_mask;
+
+	start_mask = SIZE_MAX >> (start % META_BIT);
+	start = start / META_BIT;
+	end_mask = SIZE_MAX << ((META_BIT - (end % META_BIT)) % META_BIT);
+	end = (end - 1) / META_BIT;
+	if (set)
+	{
+		bitmap[start] |= SIZE_MAX >> (start % META_BIT);
+		while (start < end)
+			bitmap[start++] = SIZE_MAX;
+		bitmap[end] |= end_mask;
+	}
+	else
+	{
+		bitmap[start] &= ~start_mask;
+		while (start < end)
+			bitmap[start++] = 0;
+		bitmap[end] &= ~end_mask;	
+	}
 }
