@@ -6,7 +6,7 @@
 /*   By: adeimlin <adeimlin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/18 15:24:01 by adeimlin          #+#    #+#             */
-/*   Updated: 2025/12/16 16:14:26 by adeimlin         ###   ########.fr       */
+/*   Updated: 2025/12/16 16:39:50 by adeimlin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,14 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "ft_alloc.h"
+
+# ifndef MEMORY_SIZE
+#  define MEMORY_SIZE 1024
+# endif
+
+# ifndef BLOCK_SIZE
+#  define BLOCK_SIZE __SIZEOF_POINTER__
+# endif
 
 static uint8_t	data[MEMORY_SIZE];
 static size_t	metadata[MEMORY_SIZE / (BLOCK_SIZE * WORD_BIT)];
