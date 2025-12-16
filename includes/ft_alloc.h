@@ -6,7 +6,7 @@
 /*   By: adeimlin <adeimlin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/06 16:01:57 by adeimlin          #+#    #+#             */
-/*   Updated: 2025/12/15 12:05:42 by adeimlin         ###   ########.fr       */
+/*   Updated: 2025/12/16 15:50:14 by adeimlin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 # include <limits.h>
 
 # ifndef MEMORY_SIZE
-#  define MEMORY_SIZE 65536u
+#  define MEMORY_SIZE 1024
 # endif
 
 # ifndef BLOCK_SIZE
@@ -36,9 +36,10 @@ enum e_sizes
 size_t	ft_bsf(size_t word);
 size_t	ft_bsr(size_t word);
 size_t	ft_popcount(size_t word);
+size_t	ft_lzcnt(size_t word);
+
 size_t	ft_bitfind(const size_t *word, size_t start, size_t end, bool bit);
-void	ft_bitset(size_t *bitmap, size_t start, size_t end);
-void	ft_bitclr(size_t *bitmap, size_t start, size_t end);
+void	ft_bitset(size_t *bitmap, size_t start, size_t end, bool bit);
 
 typedef struct s_alloc
 {
@@ -47,6 +48,7 @@ typedef struct s_alloc
 	size_t *const	metadata_end;
 	const size_t	memory_size;
 	const size_t	block_size;
+	const size_t	block_count;
 }	t_alloc;
 
 typedef struct s_bitptr

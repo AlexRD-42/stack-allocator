@@ -6,7 +6,7 @@
 /*   By: adeimlin <adeimlin@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/12 10:36:32 by adeimlin          #+#    #+#             */
-/*   Updated: 2025/12/15 12:39:09 by adeimlin         ###   ########.fr       */
+/*   Updated: 2025/12/16 11:06:59 by adeimlin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,19 @@ size_t	ft_bsr(size_t word)
 	{
 		word >>= 1;
 		i++;
+	}
+	return (i);
+}
+
+size_t	ft_lzcnt(size_t word)
+{
+	size_t	i;
+
+	i = sizeof(word) * CHAR_BIT;
+	while (word)
+	{
+		word >>= 1;
+		i--;
 	}
 	return (i);
 }

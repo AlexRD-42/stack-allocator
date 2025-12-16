@@ -1,76 +1,45 @@
 #include <stddef.h>
 #include "ft_alloc.h"
 
-// If end is not word aligned, it will scan past end until alignment
-size_t	ft_bitfind(const size_t *word, size_t start, size_t end, bool bit)
+size_t  ft_bitfind(const size_t *word, size_t start, size_t end, bool bit)
 {
-	size_t			cur;
+	size_t			i;
 	size_t			offset;
 	const size_t	start_mask = SIZE_MAX >> (start % WORD_BIT);
-	const size_t	invert = (size_t)-(!bit); // All ones or zero mask
-
-	cur = start + WORD_BIT - (start % WORD_BIT);
-	offset = ft_bsr((word[start / WORD_BIT] ^ invert) & start_mask);
-	if (offset != WORD_BIT)
-		return (cur - 1 - offset);
-	while (cur < end)
-	{
-		offset = ft_bsr(word[cur / WORD_BIT] ^ invert);
-		if (offset != WORD_BIT)
-			return (cur + WORD_BIT - 1 - offset);
-		cur += WORD_BIT;
-	}
-	return (SIZE_MAX);
-}
-
-size_t	ft_bitfind2(const size_t *word, size_t start, size_t end, bool bit)
-{
-	size_t			cur;
-	size_t			offset;
-	const size_t	start_mask = SIZE_MAX >> (start % WORD_BIT);
-	const size_t	invert = (size_t)-(!bit); // All ones or zero mask
-
-	offset = ft_bsr((word[start / WORD_BIT] ^ invert) & start_mask);
-	cur = start + WORD_BIT - (start % WORD_BIT);
-	while (cur < end && offset == WORD_BIT)
-	{
-		offset = ft_bsr(word[cur / WORD_BIT] ^ invert);
-		cur += WORD_BIT;
-	}
-	if (offset != WORD_BIT)
-		return (cur - 1 - offset);
-	return (SIZE_MAX);
-}
-
-void	ft_bitset(size_t *bitmap, size_t start, size_t end)
-{
-	const size_t	word_start = start / WORD_BIT;
+	const size_t	invert = (size_t)-(!bit);
 	const size_t	word_end = (end - 1) / WORD_BIT;
+
+	i = start / WORD_BIT;
+	offset = ft_lzcnt((word[i] ^ invert) & start_mask);
+	while (offset == WORD_BIT && i < word_end)
+	{
+		i++;
+		offset = ft_lzcnt(word[i] ^ invert);
+	}
+	offset += i * WORD_BIT;
+	if (offset >= end)
+		return (SIZE_MAX);
+	return (offset);
+}
+
+void	ft_bitset(size_t *bitmap, size_t start, size_t end, bool bit)
+{
+	const size_t	fill = (size_t)-(bit != 0);
 	const size_t	start_mask = SIZE_MAX >> (start % WORD_BIT);
 	const size_t	end_mask = SIZE_MAX << (-end % WORD_BIT);
-	const size_t	diff_mask = (size_t)-(word_start != word_end);
+	size_t			mask;
+	size_t			diff_mask;
 
-	start = word_start + 1;
-	bitmap[word_start] |= start_mask & (end_mask | diff_mask);
-	while (start < word_end)
-		bitmap[start++] = SIZE_MAX;
-	bitmap[word_end] |= end_mask & diff_mask;
-}
-
-// Bitset and bitclr are kept separate to reduce branching
-void	ft_bitclr(size_t *bitmap, size_t start, size_t end)
-{
-	const size_t	word_start = start / WORD_BIT;
-	const size_t	word_end = (end - 1) / WORD_BIT;
-	const size_t	start_mask = SIZE_MAX >> (start % WORD_BIT);
-	const size_t	end_mask = SIZE_MAX << (-end % WORD_BIT);
-	const size_t	diff_mask = (size_t)-(word_start != word_end);
-
-	start = word_start + 1;
-	bitmap[word_start] &= ~(start_mask & (end_mask | diff_mask));
-	while (start < word_end)
-		bitmap[start++] = 0;
-	bitmap[word_end] &= ~(end_mask & diff_mask);
+	start = start / WORD_BIT;
+	end = (end - 1) / WORD_BIT;
+	diff_mask = (size_t)-(start != end);
+	mask = start_mask & (end_mask | diff_mask);
+	bitmap[start] ^= (bitmap[start] ^ fill) & mask;
+	start = start + 1;
+	while (start < end)
+		bitmap[start++] = fill;
+	mask = end_mask & diff_mask;
+	bitmap[end] ^= (bitmap[end] ^ fill) & mask;
 }
 
 // MSB first

@@ -26,6 +26,8 @@ But ideally block size is way higher, like 64 bytes
 
 # Fragmentation
 How to deal with fragmentation?
+- Create a neural network to choose the best fit
+
 // Megablock: How many blocks can be represented by a size_t in metadata
 // Or BLOCK_PAGE_SIZE
 // For example: block_size 8 and size_t = 8 bytes, 64 bits per size_t for 8 bytes of block = 512 bytes
@@ -33,7 +35,12 @@ How to deal with fragmentation?
 // Memory pool:
 // Static write pointer so that allocations run linearly
 // and then only go back if 
+You could have multiple pools that as time goes on, combine 
+
+
 
 // Memory tag: tag the allocation with a specific ID, 
 // so that later you can call free on a group. Or better yet, assign it to a specific pool
 // This would work more or less like a pool with dynamic size
+
+A struct allocator, with an operation to copy all pointers that you received into a new area
